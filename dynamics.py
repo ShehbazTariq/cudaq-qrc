@@ -140,7 +140,6 @@ def generate_readouts(nsites, custom_readouts=None):
     Raises:
         ValueError: If custom_readouts contains strings of length not equal to nsites.
     """
-
     if custom_readouts is not None:
         # Validate custom readouts
         for readout in custom_readouts:
@@ -152,17 +151,22 @@ def generate_readouts(nsites, custom_readouts=None):
         for readout in custom_readouts:
             operator = None
             for i, pauli in enumerate(readout):
-                if pauli == 'X':
+                if pauli == 'I':
+                    continue  # Identity; skip this site
+                elif pauli == 'X':
                     term = cudaq.spin.x(i)
                 elif pauli == 'Y':
                     term = cudaq.spin.y(i)
                 elif pauli == 'Z':
                     term = cudaq.spin.z(i)
                 else:
-                    raise ValueError(f"Invalid character '{pauli}' in readout string. Allowed characters: 'X', 'Y', 'Z'.")
+                    raise ValueError(f"Invalid character '{pauli}' in readout string. Allowed characters: 'I', 'X', 'Y', 'Z'.")
 
+                # Combine operators with multiplication
                 operator = term if operator is None else operator * term
-            readouts.append(operator)
+
+            # Append the constructed operator
+            readouts.append(operator if operator is not None else cudaq.spin.identity())
         return readouts
 
     # Default configuration
