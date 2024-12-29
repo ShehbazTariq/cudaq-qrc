@@ -251,7 +251,7 @@ def plot_3d_lattice(nsites, d, atoms, alpha, V_matrix):
                 [x_positions[i], x_positions[j]],
                 [y_positions[i], y_positions[j]],
                 [z_positions[i], z_positions[j]],
-                color=color, linewidth=2
+                color=color, linewidth=1, linestyle="--"
             )
 
     # Beautify plot
