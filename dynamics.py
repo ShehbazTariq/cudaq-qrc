@@ -190,3 +190,81 @@ def generate_readouts(nsites, custom_readouts=None):
             ])
 
     return readouts
+
+
+
+import numpy as np
+import matplotlib.pyplot as plt
+from mpl_toolkits.mplot3d import Axes3D
+from matplotlib import cm  # For colormap
+
+def plot_3d_lattice(nsites, d, atoms, alpha, V_matrix):
+    """
+    Plot a 3D lattice of atoms with interaction strengths visualized as colored lines using a gradient.
+
+    Parameters:
+        nsites (int): Number of sites (atoms).
+        d (float): Base spacing in microns.
+        atoms (np.ndarray): Positions of atoms (not directly used in plot).
+        alpha (np.ndarray): Random modulation factors for each atom.
+        V_matrix (np.ndarray): Interaction matrix between atoms.
+
+    Returns:
+        None: Displays the plot.
+    """
+    # Normalize V_matrix for interaction-based distances and colors
+    V_min, V_max = V_matrix.min(), V_matrix.max()
+    V_normalized = (V_matrix - V_min) / (V_max - V_min)
+
+    # Place atoms in 3D based on interaction values
+    x_positions = np.zeros(nsites)
+    y_positions = np.zeros(nsites)
+    z_positions = np.zeros(nsites)
+
+    # Start placing atoms relative to the first one
+    x_positions[0], y_positions[0], z_positions[0] = 0, 0, 0  # First atom at origin
+    for i in range(1, nsites):
+        # Place subsequent atoms closer for stronger interactions
+        strongest_interaction = np.max(V_normalized[:i, i])  # Strongest interaction with any previous atom
+        distance = d * (1.5 - strongest_interaction)  # Stronger interaction = smaller distance
+        x_positions[i] = x_positions[i - 1] + np.random.uniform(-distance, distance)
+        y_positions[i] = y_positions[i - 1] + np.random.uniform(-distance, distance)
+        z_positions[i] = z_positions[i - 1] + np.random.uniform(-distance, distance)
+
+    # Create 3D plot
+    fig = plt.figure(figsize=(10, 7))
+    ax = fig.add_subplot(111, projection='3d')
+
+    # Plot atoms
+    ax.scatter(x_positions, y_positions, z_positions, s=200, c='blue')
+    for i, (x, y, z) in enumerate(zip(x_positions, y_positions, z_positions)):
+        # Display atom index inside the circle
+        ax.text(x, y, z, f"{i}", ha='center', va='center', fontsize=10, color='white', bbox=dict(boxstyle="circle", fc="blue"))
+
+    # Plot interactions as lines with color gradient
+    cmap = plt.colormaps.get_cmap('bwr')  # Updated to use the recommended function
+    for i in range(nsites):
+        for j in range(i + 1, nsites):
+            interaction_strength = V_normalized[i, j]  # Normalized strength
+            color = cmap(interaction_strength)  # Map interaction strength to color
+            ax.plot(
+                [x_positions[i], x_positions[j]],
+                [y_positions[i], y_positions[j]],
+                [z_positions[i], z_positions[j]],
+                color=color, linewidth=2
+            )
+
+    # Beautify plot
+    ax.set_xlabel("X (μm)")
+    ax.set_ylabel("Y (μm)")
+    ax.set_zlabel("Z (μm)")
+
+    # Add colorbar for interaction strength
+    sm = plt.cm.ScalarMappable(cmap='bwr', norm=plt.Normalize(vmin=V_min, vmax=V_max))
+    sm.set_array([])
+    cbar = plt.colorbar(sm, ax=ax, shrink=0.5, aspect=10, pad=0.1)
+    cbar.set_label("Interaction Strength", fontsize=10)
+
+    # Show the plot
+    plt.show()
+
