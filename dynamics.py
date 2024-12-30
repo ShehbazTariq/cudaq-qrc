@@ -4,6 +4,7 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
+from matplotlib.ticker import FormatStrFormatter
 from matplotlib import cm,rc 
 
 
@@ -227,12 +228,9 @@ def plot_3d_lattice(nsites, d, atoms, alpha, V_matrix, save_as_pdf=False, filena
     y_positions = np.zeros(nsites)
     z_positions = np.zeros(nsites)
 
-    # Start placing atoms relative to the first one
-    x_positions[0], y_positions[0], z_positions[0] = 0, 0, 0  # First atom at origin
     for i in range(1, nsites):
-        # Place subsequent atoms closer for stronger interactions
-        strongest_interaction = np.max(V_normalized[:i, i])  # Strongest interaction with any previous atom
-        distance = d * (1.5 - strongest_interaction)  # Stronger interaction = smaller distance
+        strongest_interaction = np.max(V_normalized[:i, i])
+        distance = d * (1.5 - strongest_interaction)
         x_positions[i] = x_positions[i - 1] + np.random.uniform(-distance, distance)
         y_positions[i] = y_positions[i - 1] + np.random.uniform(-distance, distance)
         z_positions[i] = z_positions[i - 1] + np.random.uniform(-distance, distance)
@@ -244,15 +242,14 @@ def plot_3d_lattice(nsites, d, atoms, alpha, V_matrix, save_as_pdf=False, filena
     # Plot atoms
     ax.scatter(x_positions, y_positions, z_positions, s=200, c='blue')
     for i, (x, y, z) in enumerate(zip(x_positions, y_positions, z_positions)):
-        # Display atom index inside the circle
         ax.text(x, y, z, f"{i}", ha='center', va='center', fontsize=10, color='white', bbox=dict(boxstyle="circle", fc="blue"))
 
     # Plot interactions as lines with color gradient
-    cmap = plt.colormaps.get_cmap('bwr')  # Updated to use the recommended function
+    cmap = plt.colormaps.get_cmap('bwr')
     for i in range(nsites):
         for j in range(i + 1, nsites):
-            interaction_strength = V_normalized[i, j]  # Normalized strength
-            color = cmap(interaction_strength)  # Map interaction strength to color
+            interaction_strength = V_normalized[i, j]
+            color = cmap(interaction_strength)
             ax.plot(
                 [x_positions[i], x_positions[j]],
                 [y_positions[i], y_positions[j]],
@@ -265,8 +262,29 @@ def plot_3d_lattice(nsites, d, atoms, alpha, V_matrix, save_as_pdf=False, filena
     ax.set_ylabel(r"$y$ ($\mu m$)")
     ax.set_zlabel(r"$z$ ($\mu m$)")
 
+    # Ensure equal aspect ratio for a perfect cube
+    max_range = np.array([
+        x_positions.max() - x_positions.min(),
+        y_positions.max() - y_positions.min(),
+        z_positions.max() - z_positions.min()
+    ]).max() / 2.0
+
+    mid_x = (x_positions.max() + x_positions.min()) * 0.5
+    mid_y = (y_positions.max() + y_positions.min()) * 0.5
+    mid_z = (z_positions.max() + z_positions.min()) * 0.5
+
+    ax.set_xlim(mid_x - max_range, mid_x + max_range)
+    ax.set_ylim(mid_y - max_range, mid_y + max_range)
+    ax.set_zlim(mid_z - max_range, mid_z + max_range)
+
+    # Remove grid and set ticks with two significant digits
+    ax.grid(True)
+    ax.xaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+    ax.yaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+    ax.zaxis.set_major_formatter(FormatStrFormatter('%.1f'))
+
     # Add colorbar for interaction strength
-    sm = plt.cm.ScalarMappable(cmap='bwr', norm=plt.Normalize(vmin=V_min, vmax=V_max))
+    sm = plt.cm.ScalarMappable(cmap='bwr', norm=plt.Normalize(vmin=0.0, vmax=1.0))
     sm.set_array([])
     cbar = plt.colorbar(sm, ax=ax, shrink=0.5, aspect=10, pad=0.1)
     cbar.set_label(r"Interaction Strength", fontsize=10)

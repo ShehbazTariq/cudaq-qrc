@@ -127,9 +127,9 @@ def genetic_algorithm_feature_selection(
         
         print(
             f"Iteration {gen+1}/{n_gen}: "
-            f"base_mse={base_mse:.4f}, "
-            f"qrc_full_mse={qrc_full_mse:.4f}, "
-            f"best_mse={best_mse:.4f}"
+            f"base_mse={base_mse:.8f}, "
+            f"qrc_full_mse={qrc_full_mse:.8f}, "
+            f"best_mse={best_mse:.8f}"
         )
         iteration_results.append({
             "iteration": gen+1,
