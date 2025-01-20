@@ -1,2 +1,4 @@
 /data/
 /privacy.ipynb
+.webui_secret_key
+/EuroSAT/
