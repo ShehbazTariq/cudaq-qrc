@@ -3,3 +3,5 @@
 .webui_secret_key
 /EuroSAT/
 /lulc-qrc.ipynb
+/dataset/
+/cache/
